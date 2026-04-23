@@ -55,7 +55,7 @@ class HomeLayout(Widget):
     self.update_notif_rect = rl.Rectangle(0, 0, 200, HEADER_HEIGHT - 10)
     self.alert_notif_rect = rl.Rectangle(0, 0, 220, HEADER_HEIGHT - 10)
 
-    self._prime_widget = PrimeWidget()
+    # self._prime_widget = PrimeWidget()
     self._setup_widget = SetupWidget()
 
     self._exp_mode_button = ExperimentalModeButton()
@@ -191,7 +191,8 @@ class HomeLayout(Widget):
     self.offroad_alert.render(self.content_rect)
 
   def _render_left_column(self):
-    self._prime_widget.render(self.left_column_rect)
+    # self._prime_widget.render(self.left_column_rect)
+    self._exp_mode_button.render(self.left_column_rect)
 
   def _render_right_column(self):
     exp_height = 125

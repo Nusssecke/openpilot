@@ -130,11 +130,11 @@ function op_check_git() {
 function op_check_os() {
   echo "Checking for compatible os version..."
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-
+    # Add Mint ("zena") support
     if [ -f "/etc/os-release" ]; then
       source /etc/os-release
       case "$VERSION_CODENAME" in
-        "jammy" | "kinetic" | "noble" | "focal")
+        "jammy" | "kinetic" | "noble" | "focal" | "zena")
           echo -e " ↳ [${GREEN}✔${NC}] Ubuntu $VERSION_CODENAME detected."
           ;;
         * )
