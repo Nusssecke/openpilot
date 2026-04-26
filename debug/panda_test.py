@@ -37,11 +37,13 @@ def receive():
     # print(dbc.addr_to_msg.get(rx_addr))
     # can_data.append(CanData(rx_addr, rx_data_bytearray, rx_bus)) # I don't know where or how to use this yet
 
-  # dbc = DBC("vw_meb")
+  dbc = DBC("vw_meb")
   # print(dbc.addr_to_msg.get(messages[0][0]))
 
-  parser = CANParser("vw_meb", shortend_messages, 0)
-  print(parser.vl["ESP_19"]["ESP_VL_Radgeschw_02"])
+  parser = CANParser("vw_meb", [], 0)
+  # can_packets: list[tuple[int, list[CanData]]]
+  parser.update(messages)
+  # print(parser.vl["ESP_19"]["ESP_VL_Radgeschw_02"]) # Wrong values for meb
   # print(parser.addresses)
   # print(parser.bus)
   # print(parser.vl)
