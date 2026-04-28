@@ -1,16 +1,9 @@
 from panda import Panda
 from opendbc.car.structs import CarParams # <- These are in car.capnp
 
-from opendbc.car.car_helpers import get_car
 from opendbc.car.can_definitions import CanData
-from opendbc.car.structs import CarParams, CarControl
-from opendbc.car.vin import get_vin
 from opendbc.can.parser import CANParser
-from opendbc.can.packer import CANPacker
-from opendbc.can.dbc import DBC
 import time
-
-from collections import Counter
 
 panda = Panda()
 
@@ -28,7 +21,7 @@ def read():
 
       parser.update(can_data)
       doors = parser.vl["ZV_02"] if bool(parser.vl["Gateway_72"]["ZV_02_alt"]) else parser.vl["Gateway_72"]
-      print(f"Door: {doors["ZV_FT_offen"]}")
+      print(f"Door: {doors['ZV_FT_offen']}")
 
 
 # self.p.set_safety_mode(CarParams.SafetyModel.noOutput)
