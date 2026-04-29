@@ -19,8 +19,8 @@ from q4_car_state import CarState
 
 panda = Panda()
 
-panda.reset() # Test if necessary
-panda.set_safety_mode(CarParams.SafetyModel.allOutput, 0) # <- Might have something do to with all the car popups
+# panda.reset() # Test if necessary
+# panda.set_safety_mode(CarParams.SafetyModel.allOutput, 0) # <- Might have something do to with all the car popups
 
 car_state = CarState()
 
@@ -56,6 +56,7 @@ def get_can_parsers_meb():
 
 if __name__ == "__main__":
   threading.Thread(target=panda_update, args=(), daemon=True).start()
+  time.sleep(1)
   while True:
-    print(car_state)
+    print(car_state.diagnose_01_values)
     time.sleep(0.1)

@@ -7,8 +7,8 @@ import time
 
 panda = Panda()
 
-panda.reset() # Test if necessary
-panda.set_safety_mode(CarParams.SafetyModel.allOutput, 0) # <- Might have something do to with all the car popups
+# panda.reset() # Test if necessary
+# panda.set_safety_mode(CarParams.SafetyModel.allOutput, 0) # <- Might have something do to with all the car popups
 
 def read():
   parser = CANParser("vw_meb", [], 1)
@@ -27,3 +27,6 @@ def read():
 # self.p.set_safety_mode(CarParams.SafetyModel.noOutput)
 # self.p.reset()  # avoid siren
 # return super().__exit__(exc_type, exc_value, traceback)
+
+if __name__ == "__main__":
+  read()

@@ -462,6 +462,12 @@ wheels = [
 ]
 
 [[package]]
+name = "hexdump"
+version = "3.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/55/b3/279b1d57fa3681725d0db8820405cdcb4e62a9239c205e4ceac4391c78e4/hexdump-3.3.zip", hash = "sha256:d781a43b0c16ace3f9366aade73e8ad3a7bd5137d58f0b45ab2d3f54876f20db", size = 12658, upload-time = "2016-01-22T14:40:19.589Z" }
+
+[[package]]
 name = "hypothesis"
 version = "6.47.5"
 source = { registry = "https://pypi.org/simple" }
@@ -758,6 +764,7 @@ dependencies = [
     { name = "ffmpeg" },
     { name = "gcc-arm-none-eabi" },
     { name = "git-lfs" },
+    { name = "hexdump" },
     { name = "inputs" },
     { name = "jeepney" },
     { name = "json-rpc" },
@@ -837,6 +844,7 @@ requires-dist = [
     { name = "ffmpeg", git = "https://github.com/commaai/dependencies.git?subdirectory=ffmpeg&rev=release-ffmpeg" },
     { name = "gcc-arm-none-eabi", git = "https://github.com/commaai/dependencies.git?subdirectory=gcc-arm-none-eabi&rev=release-gcc-arm-none-eabi" },
     { name = "git-lfs", git = "https://github.com/commaai/dependencies.git?subdirectory=git-lfs&rev=release-git-lfs" },
+    { name = "hexdump", specifier = ">=3.3" },
     { name = "hypothesis", marker = "extra == 'testing'", specifier = "==6.47.*" },
     { name = "imgui", marker = "extra == 'tools'", git = "https://github.com/commaai/dependencies.git?subdirectory=imgui&rev=release-imgui" },
     { name = "inputs" },
