@@ -1,3 +1,4 @@
+from debug.car_state.car_state_structs import GasPedal, Wheels
 from opendbc.car.interfaces import CarStateBase, GearShifter
 from opendbc.car.structs import CarParams
 from opendbc.can import CANParser
@@ -16,26 +17,18 @@ class CarState():
     # Set up can parsers
     pt_cp = can_parsers[Bus.pt] # Powertrain CANParser
     cam_cp = can_parsers[Bus.cam] # Camera CANParser
-    # Exterior, Lights, Mirrors, Doors
-    # ext_cp = pt_cp if self.CP.networkLocation == NetworkLocation.fwdCamera else cam_cp
-    ext_cp = cam_cp
-    # Alternative / Auxiliary
-    alt_cp = can_parsers[Bus.alt]
+    # ext_cp = cam_cp # Exterior, Lights, Mirrors, Doors
+    alt_cp = can_parsers[Bus.alt] # Alternative / Auxiliary
 
     # Update vehicle speed and acceleration from ABS wheel speeds.
-    self.wheel_speeds = [
-      pt_cp.vl["ESC_51"]["VL_Radgeschw"],
-      pt_cp.vl["ESC_51"]["VR_Radgeschw"],
-      pt_cp.vl["ESC_51"]["HL_Radgeschw"],
-      pt_cp.vl["ESC_51"]["HR_Radgeschw"]
-    ]
+    esc_51 = pt_cp.vl["ESC_51"]
+    wheel_speeds = [esc_51["VL_Radgeschw"], esc_51["VR_Radgeschw"], esc_51["HL_Radgeschw"], esc_51["HR_Radgeschw"]]
+    wheel_brakes = [esc_51["VL_Brake_Pressure"], esc_51["VR_Brake_Pressure"], esc_51["HL_Brake_Pressure"], esc_51["HR_Brake_Pressure"]]
+    self.wheels = Wheels(wheel_speeds=wheel_speeds, wheel_brakes=wheel_brakes)
 
-    self.wheel_brakes = [
-      pt_cp.vl["ESC_51"]["VL_Brake_Pressure"]
-      pt_cp.vl["ESC_51"]["VR_Brake_Pressure"]
-      pt_cp.vl["ESC_51"]["HL_Brake_Pressure"]
-      pt_cp.vl["ESC_51"]["HR_Brake_Pressure"]
-    ]
+    # VIN
+    self.vin = "".join([chr(pt_cp.vl["VIN_01"][f"VIN_{i}"]) for i in range(1, 18)])
+    assert self.vin == "WAUZZZFZ8NP031807"
 
     # Gear
     self.gear1 = pt_cp.vl["Gateway_73"]["GE_Fahrstufe"]
@@ -45,21 +38,27 @@ class CarState():
     # Parking Brake
     self.parkingBrake = pt_cp.vl["Gateway_73"]["EPB_Status"]
 
-    # Update gas, brakes, and gearshift.
-    self.gasPressed   = pt_cp.vl["Motor_54"]["Accelerator_Pressure"] > 0 # MQBevo offset is not reliable (fluctuation or different statically in small range)
-    self.gasPressed   = pt_cp.vl["Motor_51"]["Accel_Pedal_Pressure"] > 0 # detects accel pedal "a little bit" later than ["Motor_54"]["Accelerator_Pressure"]
+    # Accelerator Pedal
+    accelerator_pressure   = pt_cp.vl["Motor_54"]["Accelerator_Pressure"] > 0 # MQBevo offset is not reliable (fluctuation or different statically in small range)
+    accel_pedal_pressure = pt_cp.vl["Motor_51"]["Accel_Pedal_Pressure"] > 0 # detects accel pedal "a little bit" later than ["Motor_54"]["Accelerator_Pressure"]
+    assert accelerator_pressure == accel_pedal_pressure
 
+    # kickdown
+    # Candidates
+    # pt_cp.vl["Motor_51"]["MO_Kickdown"] <- More likely
+    # pt_cp.vl["Motor_51"]["Accel_Low_Pressed_Support"]
+    self.kickdown = 0
+    self.gasPedal = GasPedal(accelerator_pressure, self.kickdown)
+
+    # Brakes
     self.brakePressed = bool(pt_cp.vl["Motor_14"]["MO_Fahrer_bremst"]) # includes regen braking by user
     self.brake        = pt_cp.vl["ESC_51"]["Brake_Pressure"]
 
 
     # Update door and trunk/hatch lid open status.
     doors = pt_cp.vl["ZV_02"] if bool(pt_cp.vl["Gateway_72"]["ZV_02_alt"]) else pt_cp.vl["Gateway_72"]
-    self.doorOpen = any([doors["ZV_FT_offen"],
-                        doors["ZV_BT_offen"],
-                        doors["ZV_HFS_offen"],
-                        doors["ZV_HBFS_offen"],
-                        doors["ZV_HD_offen"]])
+    self.doorOpen = any([doors["ZV_FT_offen"], doors["ZV_BT_offen"], doors["ZV_HFS_offen"], doors["ZV_HBFS_offen"], doors["ZV_HD_offen"]])
+
 
     # Update seatbelt fastened status.
     seatbelts = pt_cp.vl["Airbag_02"]
@@ -70,6 +69,28 @@ class CarState():
        seatbelts["AB_Gurtschloss_Reihe2_MI"],
        seatbelts["AB_Gurtschloss_Reihe2_BF"]
     ]
+
+
+    # Display
+    # pt_cp.vl["Dimmung_01"]["DI_Diplay_Nachtdesign"] # Nachtdesign
+
+    # Multifunktionslenkrad
+    # MFL_01
+
+
+    # Verkehrszeichenerkennung
+    cam_cp.vl["VZE_04"]["VZE_Verkehrzeichen_1"] # Erlaubtes Tempolimit
+
+
+
+    # GRA: Geschwindigkeitsregelanlage
+    self.gra_hauptschalter = pt_cp.vl["GRA_ACC_01"]["GRA_Hauptschalter"]
+    # GRA_ACC_01 seems to have mainly button information
+
+
+    # ACC: Adaptive Cruise Control, Abstandsregeltempomat
+    # ACC_18, ACC_19
+
 
     # Update EPS position and state info. For signed values, VW sends the sign in a separate signal.
     # LWI_01, MEP_EPS_01 steering angle differs from real steering angle (dynamic steering)
@@ -140,23 +161,6 @@ class CarState():
     #   if self.cruiseState.speed > 90:
     #     self.cruiseState.speed = 0
 
-    # Speed Limit
-    raining = pt_cp.vl["RLS_01"]["RS_Regenmenge"] > 0
-    # vze_01_values = cam_cp.vl["VZE_04"] # Traffic Sign Recognition
-    self.psd_04_values = alt_cp.vl["PSD_04"] # Predicative Street Data
-    self.psd_05_values = alt_cp.vl["PSD_05"]
-    self.psd_06_values = alt_cp.vl["PSD_06"]
-    # psd_06_values = pt_cp.vl["PSD_06"] if not psd_06_values and self.CP.flags & VolkswagenFlags.STOCK_PSD_06_PRESENT else psd_06_values # try to get from bus 0
-    self.diagnose_01_values = pt_cp.vl["Diagnose_01"] # if self.CP.flags & VolkswagenFlags.STOCK_DIAGNOSE_01_PRESENT else {}
-
-    # self.speed_limit_mgr.enable_predicative_speed_limit(self.enable_predicative_speed_limit, self.enable_pred_react_to_speed_limits, self.enable_pred_react_to_curves)
-    # self.speed_limit_mgr.update(ret.vEgo, psd_04_values, psd_05_values, psd_06_values, vze_01_values, raining, diagnose_01_values)
-    # self.cruiseState.speedLimit = self.speed_limit_mgr.get_speed_limit()
-    # self.cruiseState.speedLimitPredicative = self.speed_limit_mgr.get_speed_limit_predicative()
-    # self.speed_limit_predicative_type = self.speed_limit_mgr.get_speed_limit_predicative_type()
-
-    # ret_sp.speedLimit = self.cruiseState.speedLimit
-
     # Update button states for turn signals and ACC controls, capture all ACC button state/config for passthrough
     # turn signal effect
     self.left_blinker_active  = bool(pt_cp.vl["Blinkmodi_02"]["BM_links"])
@@ -164,17 +168,6 @@ class CarState():
     # turn signal cause (see door logic same schema ["Gateway_72"]["SMLS_01_alt"] is not neccessary -> SMLS_01 seems to always work)
     # self.leftBlinker, self.rightBlinker = self.update_blinker_from_stalk(240, pt_cp.vl["SMLS_01"]["BH_Blinker_li"],
     #                                                                         pt_cp.vl["SMLS_01"]["BH_Blinker_re"])
-
-    # detect button configuration
-    # for latched main cruise button (or no main button present), there is probably a physical cancel button
-    # existing main cruise push button is probably used as cancel button if present
-    self.main_cruise_latching = not bool(pt_cp.vl["GRA_ACC_01"]["GRA_Typ_Hauptschalter"])
-    # buttons = self.CCP.BUTTONS_ALT if main_cruise_latching else self.CCP.BUTTONS
-    # self.buttonEvents = self.create_button_events(pt_cp, buttons)
-
-    self.gra_stock_values = pt_cp.vl["GRA_ACC_01"]
-    self.gra_hauptschalter = pt_cp.vl["GRA_ACC_01"]["GRA_Hauptschalter"]
-    self.gra_abbrechen = pt_cp.vl["GRA_ACC_01"]["GRA_Abbrechen"]
 
     # Additional safety checks performed in CarInterface.
     self.espDisabled = bool(pt_cp.vl["ESP_21"]["ESP_Tastung_passiv"]) # this is also true for ESC Sport mode

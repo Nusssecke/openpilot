@@ -15,7 +15,7 @@ from opendbc.can.dbc import DBC
 import time
 
 from collections import Counter
-from q4_car_state import CarState
+from debug.car_state.q4_car_state import CarState
 
 panda = Panda()
 
