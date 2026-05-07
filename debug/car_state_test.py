@@ -17,14 +17,7 @@ import time
 from collections import Counter
 from debug.car_state.q4_car_state import CarState
 
-panda = Panda()
-
-# panda.reset() # Test if necessary
-# panda.set_safety_mode(CarParams.SafetyModel.allOutput, 0) # <- Might have something do to with all the car popups
-
-car_state = CarState()
-
-def panda_update():
+def panda_update(panda, car_state):
   can_parsers = get_can_parsers_meb()
 
   while(True):
@@ -54,9 +47,24 @@ def get_can_parsers_meb():
       Bus.alt: CANParser("vw_meb", [], 1),
     }
 
-if __name__ == "__main__":
-  threading.Thread(target=panda_update, args=(), daemon=True).start()
+
+def create_active_car_state():
+  panda = Panda()
+
+  # panda.reset() # Test if necessary
+  # panda.set_safety_mode(CarParams.SafetyModel.allOutput, 0) # <- Might have something do to with all the car popups
+
+  car_state = CarState()
+
+  threading.Thread(target=panda_update, args=(panda, car_state), daemon=True).start()
+
+  # Wait for the Thread to start and the car_state to have updated before reading out values
   time.sleep(1)
+
+  return car_state
+
+if __name__ == "__main__":
+  car_state = create_active_car_state()
   while True:
     print(car_state.diagnose_01_values)
     time.sleep(0.1)

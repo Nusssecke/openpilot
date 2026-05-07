@@ -1,0 +1,10 @@
+# Roadmap
+
+1. Make car_controller
+2. Run car_state_test on car
+3. Make raylib gui for car_state / car_control
+
+
+# What should the gui do?
+Read out state of the car from car state
+Make buttons available to trigger something
