@@ -25,10 +25,11 @@ ACC_HUD_DISABLED = 0
 
 
 def create_steering_control(packer, bus, apply_curvature, lkas_enabled, power):
+  # HCA - Heading Control Assist
   values = {
     "Curvature": abs(apply_curvature), # in rad/m
     "Curvature_VZ": 1 if apply_curvature > 0 and lkas_enabled else 0,
-    "Power": power if lkas_enabled else 0,
+    "Power": power if lkas_enabled else 0, # Percent Total
     "RequestStatus": 4 if lkas_enabled else 2,
     "HighSendRate": lkas_enabled,
   }
@@ -36,6 +37,7 @@ def create_steering_control(packer, bus, apply_curvature, lkas_enabled, power):
 
 
 def create_eps_update(packer, bus, eps_stock_values, ea_simulated_torque):
+  # EPS - Electric Power Steering, used for pacifying VW Emergency Assist driver inactivity by simulating driver torque input
   values = {s: eps_stock_values[s] for s in [
     "COUNTER",                     # Sync counter value to EPS output
     "EPS_Lenkungstyp",             # EPS rack type
@@ -337,6 +339,8 @@ def create_acc_hud_control(packer, bus, acc_control, set_speed, lead_visible, di
 
 
 def create_aeb_control(packer, bus, CP):
+  # AEB - Autonomous Emergency Braking
+  # AWV - Anhaltewegverkürzung
   # default inactive values basically present for every plattform (MEB Gen 1/2, MQBevo Gen 1)
   values = {
     "SET_ME_63":    63,

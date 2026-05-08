@@ -64,7 +64,7 @@ def receive():
 
   # vin_rx_addr, vin_rx_bus, vin = get_vin(can_recv, panda.can_send_many, (0, 1))
   # print(f"{vin_rx_addr=}, {vin_rx_bus=}, {vin=}")
-  # Expected Value: WAUZZZFZ8NPO31807
+  # Expected Value: WAUZZZFZ8NP031807
 
   # CI = get_car(can_recv, panda.can_send_many, panda.set_obd, True, False)
   # print(CI)

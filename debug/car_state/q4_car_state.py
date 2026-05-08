@@ -13,7 +13,7 @@ class CarState():
   def __init__(self):
     pass
 
-  def update(self, can_parsers: dict[StrEnum, CANParser]): # -> structs.CarState:
+  def update(self, can_parsers: dict[StrEnum, CANParser]):
     # Set up can parsers
     pt_cp = can_parsers[Bus.pt] # Powertrain CANParser
     cam_cp = can_parsers[Bus.cam] # Camera CANParser
@@ -107,8 +107,9 @@ class CarState():
     # self.hca_status = self.CCP.hca_status_values.get(pt_cp.vl["QFK_01"]["LatCon_HCA_Status"])
     # self.steerFaultTemporary, self.steerFaultPermanent = self.update_hca_state(self.hca_status, drive_mode=self.drive_mode)
 
+    # TODO: Move all messages that need to be passed along together
     # VW Emergency Assist status tracking and mitigation
-    # self.eps_stock_values = pt_cp.vl["LH_EPS_03"]
+    self.eps_stock_values = pt_cp.vl["LH_EPS_03"]
     # self.klr_stock_values = pt_cp.vl["KLR_01"] # if self.CP.flags & VolkswagenFlags.STOCK_KLR_PRESENT else {}
     # self.carFaultedNonCritical = cam_cp.vl["EA_01"]["EA_Funktionsstatus"] in (3, 4, 5, 6) # emergency assist always present also if not coded
 
